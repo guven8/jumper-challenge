@@ -13,14 +13,7 @@ Each directory has its own **README.md** with more details on setup and usage.
 
 ## 🛠 Setup Instructions
 
-### **1️⃣ Clone the Repository**
-
-```bash
-git clone [your-repo-url]
-cd jumper-challenge
-```
-
-### **2️⃣ Clone the Repository**
+### **1️⃣ Set Up Environment Variables**
 
 Both the frontend and backend require environment variables.
 
@@ -29,7 +22,7 @@ Both the frontend and backend require environment variables.
 - Backend:
   - Copy .env.template to .env and add your ALCHEMY_API_KEY (obtained here https://www.alchemy.com)
 
-### **3️⃣ Install Dependencies**
+### **2️⃣ Install Dependencies**
 
 Run the following command in both frontend/ and backend/:
 
@@ -39,7 +32,7 @@ npm install
 yarn install
 ```
 
-### **4️⃣ Run the Application**
+### **3️⃣ Run the Application**
 
 Start the backend:
 
