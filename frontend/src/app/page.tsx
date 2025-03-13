@@ -1,10 +1,9 @@
-import { Box, Typography } from "@mui/material";
-import Image from "next/image";
+import WalletConnect from "./components/WalletConnect";
 
 export default function Home() {
   return (
-    <Box display="flex" justifyContent="center">
-      <Typography variant="h1">Welcome to Jumper challenge!</Typography>
-    </Box>
+    <>
+      <WalletConnect />
+    </>
   );
 }
