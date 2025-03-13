@@ -10,4 +10,12 @@ export const env = cleanEnv(process.env, {
   CORS_ORIGIN: str({ devDefault: testOnly('http://localhost:3000') }),
   COMMON_RATE_LIMIT_MAX_REQUESTS: num({ devDefault: testOnly(1000) }),
   COMMON_RATE_LIMIT_WINDOW_MS: num({ devDefault: testOnly(1000) }),
+  ALCHEMY_API_KEY: str(),
+});
+
+const requiredEnvVars = ['ALCHEMY_API_KEY'];
+requiredEnvVars.forEach((key) => {
+  if (!process.env[key]) {
+    console.warn(`⚠️ Warning: Missing required environment variable ${key}.`);
+  }
 });

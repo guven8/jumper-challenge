@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { BACKEND_URL } from "@/lib/config";
 
 export default function WalletConnect() {
   const { address, isConnected } = useAccount();
@@ -24,14 +25,11 @@ export default function WalletConnect() {
       const message = `Signing in to ERC20 Token Explorer as ${address}`;
       const signature = await signMessageAsync({ message });
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth`,
-        {
-          method: "POST",
-          body: JSON.stringify({ address, signature }),
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const res = await fetch(`${BACKEND_URL}/api/auth`, {
+        method: "POST",
+        body: JSON.stringify({ address, signature }),
+        headers: { "Content-Type": "application/json" },
+      });
 
       const data = await res.json();
 
@@ -58,7 +56,7 @@ export default function WalletConnect() {
       setIsLoadingTokens(true);
       setError(null);
 
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/tokens/${address}`)
+      fetch(`${BACKEND_URL}/api/tokens/${address}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.error) throw new Error(data.error);
