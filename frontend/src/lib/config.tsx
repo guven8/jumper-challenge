@@ -19,12 +19,6 @@ Object.entries(requiredEnvVars).forEach(([key, value]) => {
   }
 });
 
-if (!PROJECT_ID) {
-  console.warn(
-    "⚠️ Warning: NEXT_PUBLIC_PROJECT_ID is not set. Please check your .env.local file."
-  );
-}
-
 export const config = getDefaultConfig({
   appName: "ERC20 Token Explorer",
   projectId: PROJECT_ID!,
