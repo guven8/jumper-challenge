@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
@@ -8,79 +8,111 @@ export default function WalletConnect() {
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const [tokens, setTokens] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [isLoadingTokens, setIsLoadingTokens] = useState(false);
+  const [error, setError] = useState<string | null>("");
+  const [success, setSuccess] = useState<boolean>(false);
+  const [isSigning, setIsSigning] = useState(false);
 
   async function handleSignIn() {
+    if (!address) return;
+
+    setIsSigning(true);
+    setError(null);
+    setSuccess(false);
+
     try {
       const message = `Signing in to ERC20 Token Explorer as ${address}`;
       const signature = await signMessageAsync({ message });
 
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        body: JSON.stringify({ address, signature }),
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth`,
+        {
+          method: "POST",
+          body: JSON.stringify({ address, signature }),
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-      if (!res.ok) throw new Error("Authentication failed");
-      console.log("User authenticated!");
-    } catch (error) {
-      console.error("Error signing in:", error);
-    }
-  }
-
-  async function fetchTokens() {
-    setLoading(true);
-    setError("");
-
-    try {
-      const res = await fetch(`/api/tokens/${address}`);
-      if (!res.ok) throw new Error("Failed to fetch tokens");
       const data = await res.json();
-      setTokens(data);
-    } catch (error: any) {
-      setError(error.message);
+
+      if (!res.ok) {
+        throw new Error(data.error || "Authentication failed");
+      }
+
+      console.log("User authenticated!");
+      setSuccess(true);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong during authentication."
+      );
     } finally {
-      setLoading(false);
+      setIsSigning(false);
     }
   }
+
+  // Fetch tokens automatically after successful authentication
+  useEffect(() => {
+    if (success && address) {
+      setIsLoadingTokens(true);
+      setError(null);
+
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/tokens/${address}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) throw new Error(data.error);
+          setTokens(data.tokens);
+        })
+        .catch((err) => setError(err.message))
+        .finally(() => setIsLoadingTokens(false));
+    }
+  }, [success, address]);
 
   return (
-    <div className="flex justify-center items-center w-full min-h-screen bg-gray-900 text-white">
-      <div className="w-full max-w-md p-6 bg-gray-800 rounded-lg shadow-md text-center">
-        <h1 className="text-2xl font-bold mb-4">ERC20 Token Explorer</h1>
-        <ConnectButton />
-        {isConnected && (
-          <>
-            <p className="mt-4 text-sm">Connected Address: {address}</p>
-            <button
-              onClick={handleSignIn}
-              className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
-            >
-              Verify Ownership
-            </button>
-            <button
-              onClick={fetchTokens}
-              className="mt-2 w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded"
-            >
-              Fetch ERC20 Tokens
-            </button>
-            {loading && (
-              <div className="mt-4 animate-spin border-4 border-white border-t-transparent rounded-full w-6 h-6 mx-auto"></div>
-            )}
-            {error && <p className="text-red-500 mt-4">{error}</p>}
-            {tokens.length > 0 && (
-              <ul className="mt-4 text-left">
-                {tokens.map((token, index) => (
-                  <li key={index} className="border-b border-gray-700 py-2">
-                    {token.name} ({token.symbol}): {token.balance}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        )}
-      </div>
+    <div className="p-4">
+      <ConnectButton />
+      {isConnected && (
+        <div className="mt-4">
+          <p className="text-sm sm:text-base">Connected Address: {address}</p>
+          <button
+            className="bg-blue-500 text-white p-2 rounded mt-2"
+            onClick={handleSignIn}
+            disabled={isSigning}
+          >
+            {isSigning ? "Signing..." : "Verify Ownership"}
+          </button>
+
+          {error && <p className="text-red-500 mt-2">{error}</p>}
+          {success && (
+            <p className="text-green-500 mt-2">
+              ✅ Wallet successfully validated!
+            </p>
+          )}
+
+          {isLoadingTokens && (
+            <p className="mt-2">🔄 Fetching ERC20 tokens...</p>
+          )}
+
+          {tokens.length > 0 && (
+            <ul className="mt-4 text-left">
+              {tokens.map((token, index) => (
+                <li key={index} className="border-b border-gray-700 py-2">
+                  <p>
+                    <strong>
+                      {token.name} ({token.symbol})
+                    </strong>
+                  </p>
+                  <p>Balance: {token.balance}</p>
+                  <p className="text-gray-400 text-xs">
+                    Contract: {token.contractAddress}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

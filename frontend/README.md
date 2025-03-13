@@ -2,7 +2,16 @@
 
 ## Getting Started
 
-First, run the development server:
+First, setup environment variables:
+
+- Create `.env`: Copy `.env.template` to `.env.local`
+- Update `.env`: Fill in necessary environment variables
+
+Second, install dependencies
+
+- Install dependencies: `npm install`
+
+Finally, run the development server:
 
 ```bash
 npm run dev
